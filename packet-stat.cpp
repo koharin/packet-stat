@@ -1,4 +1,3 @@
-#include <iostream>
 #include <pcap.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -41,45 +40,45 @@ int main(int argc, char* argv[])
         if(res == -1 || res == -2) break;
     
         ethernet = (struct sniff_ethernet*)(packet);
-        
-        if(ntohs(ethernet->ether_type == ETHERTYPE_IP)){
+        ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
             
-            ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
-            
-            if(Endpoints_IPv4.find(ip->ip_src) == Endpoints_IPv4.end()){
-                Endpoints_IPv4.at(ip->ip_src).Tx_Packets = 0;
-                Endpoints_IPv4.at(ip->ip_src).Tx_Bytes = 0;
-                Endpoints_IPv4.at(ip->ip_src).Rx_Packets = 0;
-                Endpoints_IPv4.at(ip->ip_src).Rx_Bytes = 0;
-            }
-            else{
-                Endpoints_IPv4.at(ip->ip_src).Tx_Packets++;
-                Endpoints_IPv4.at(ip->ip_src).Tx_Bytes += header->caplen;
-            }
-            if(Endpoints_IPv4.find(ip->ip_dst) == Endpoints_IPv4.end()){
-                Endpoints_IPv4.at(ip->ip_dst).Rx_Packets = 0;
-                Endpoints_IPv4.at(ip->ip_dst).Rx_Bytes = 0;
-                Endpoints_IPv4.at(ip->ip_dst).Tx_Packets = 0;
-                Endpoints_IPv4.at(ip->ip_dst).Tx_Bytes = 0;
-            }
-            else{
-                Endpoints_IPv4.at(ip->ip_dst).Rx_Packets++;
-                Endpoints_IPv4.at(ip->ip_dst).Rx_Bytes += header->caplen;
-            }
+        if(Endpoints_IPv4.find(ip->ip_src) == Endpoints_IPv4.end()){
+            Endpoints_IPv4[ip->ip_src].Tx_Packets = 0;
+            Endpoints_IPv4[ip->ip_src].Tx_Bytes = 0;
+            Endpoints_IPv4[ip->ip_src].Rx_Packets = 0;
+            Endpoints_IPv4[ip->ip_src].Rx_Bytes = 0;
         }
+        else{
+            Endpoints_IPv4[ip->ip_src].Tx_Packets++;
+                Endpoints_IPv4[ip->ip_src].Tx_Bytes += header->caplen;
+        }
+        if(Endpoints_IPv4.find(ip->ip_dst) == Endpoints_IPv4.end()){
+            Endpoints_IPv4[ip->ip_dst].Rx_Packets = 0;
+            Endpoints_IPv4[ip->ip_dst].Rx_Bytes = 0;
+            Endpoints_IPv4[ip->ip_dst].Tx_Packets = 0;
+            Endpoints_IPv4[ip->ip_dst].Tx_Bytes = 0;
+        }
+        else{
+            Endpoints_IPv4[ip->ip_dst].Rx_Packets++;
+            Endpoints_IPv4[ip->ip_dst].Rx_Bytes += header->caplen;
+        }    
     }
     //unordered_map<struct in_addr, struct data>::iterator iter; 
     for(auto iter=Endpoints_IPv4.begin(); iter != Endpoints_IPv4.end(); iter++)
     {
+        cout << "-----------------------------------------------------------------------------------------------" << endl;
         printf("Address: %s ", inet_ntoa(iter->first));
         printf("Packets: %d", (iter->second).Tx_Packets + (iter->second).Rx_Packets);
         printf("Bytes: %u", (iter->second).Rx_Bytes + (iter->second).Rx_Bytes);
         printf("Tx Packets: %d", (iter->second).Tx_Packets);
         printf("Tx Bytes: %u", (iter->second).Tx_Bytes);
         printf("Rx Packets: %d", (iter->second).Rx_Packets);
-        printf("Rx Bytes: %u", (iter->second).Rx_Bytes);
-        cout << "-----------------------------------------------------" << endl;
-    }
+        printf("Rx Bytes: %u\n", (iter->second).Rx_Bytes);
+        
+    }        
+            
+    cout << "-----------------------------------------------------------------------------------------------" << endl;
+
     pcap_close(pcap_handle);
     
     return 0;
